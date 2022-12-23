@@ -11,7 +11,9 @@
   "bin": {
     "run": "./dist/index.js"
   },
-  "files": [ "dist" ],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "tsup lib/index.ts",
@@ -32,7 +34,7 @@
     "typescript": "^4.8.2"
   },
   "engines": {
-    "node": ">=12.22"
+    "node": ">=14.19"
   },
   "engineStrict": true
 }
