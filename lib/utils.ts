@@ -104,8 +104,9 @@ export const replaceVersionInCommonFiles = (oldVersion: string, newVersion: stri
 		files: [
 			'package.json',
 			'**/package.json', // Useful for workspaces with nested package.jsons also including versions.
-			'package-lock.json',
-			'package-lock.json', // Duplicate because lock file contains two occurences.
+			// @TODO: Do not use until https://github.com/sladg/release-utils/issues/2 is fixed.
+			// 'package-lock.json',
+			// 'package-lock.json', // Duplicate because lock file contains two occurences.
 			// 'yarn.lock', Yarn3 lock file does not contain version from package.json
 			'composer.json',
 			'**/composer.json', // Useful for workspaces with nested composer.jsons also including versions.
