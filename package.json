@@ -1,0 +1,38 @@
+{
+  "name": "@sladg/release-utils",
+  "version": "0.0.1",
+  "description": "Simple set of npx commands to automate git flow.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sladg/release-utils"
+  },
+  "license": "MIT",
+  "author": "Jan Soukup <jan@ssoukup.com>",
+  "bin": {
+    "run": "./dist/index.js"
+  },
+  "files": [ "dist" ],
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "tsup lib/index.ts",
+    "commit": "npx --package cz-emoji-conventional --package commitizen -- cz",
+    "release": "node ./dist/index.js shipit --gitUser @sladg --gitEmail jan@ssoukup.com --changelog"
+  },
+  "devDependencies": {
+    "@types/archiver": "^5.3.1",
+    "@types/node": "^18.7.16",
+    "@types/semver": "^7.3.13",
+    "archiver": "^5.3.1",
+    "commander": "^9.4.0",
+    "replace-in-file": "^6.3.5",
+    "semver": "^7.3.8",
+    "semver-regex": "^4.0.5",
+    "simple-git": "^3.14.1",
+    "tsup": "^6.5.0",
+    "typescript": "^4.8.2"
+  },
+  "engines": {
+    "node": ">=12.22"
+  },
+  "engineStrict": true
+}
