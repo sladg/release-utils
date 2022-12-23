@@ -66,7 +66,7 @@ export const shipitHandler = async ({
 	const bumps: BumpType[] = []
 
 	commits.all.forEach(({ message, body }) => {
-		const match = bumpMapping.find(({ test, scanBody }) => (scanBody ? body : message).match(test))
+		const match = bumpMapping.find(({ test, scanBody }) => (scanBody ? `${body}\n${message}` : message).match(test))
 		if (!match) {
 			console.warn(`Invalid commit, cannot match bump - ${message}!`)
 		} else {

@@ -10,12 +10,14 @@ export enum BumpType {
 
 export const bumpMapping = [
 	{
-		test: /(.*)(fix:|fix\((.*)\):)/,
-		bump: BumpType.Patch,
+		test: /(.*)(BREAKING CHANGE:|BREAKING CHANGE\((.*)\):)/,
+		bump: BumpType.Major,
+		scanBody: true,
 	},
 	{
-		test: /(.*)(chore:|chore\((.*)\):)/,
-		bump: BumpType.Patch,
+		test: /BREAKING CHANGE/i,
+		bump: BumpType.Major,
+		scanBody: true,
 	},
 	{
 		test: /(.*)(feat:|feat\((.*)\):|feature:|feature\((.*)\):)/,
@@ -28,10 +30,6 @@ export const bumpMapping = [
 	{
 		test: /(.*)(ref:|ref\((.*)\):|refactor:|refactor\((.*)\):|refactoring:|refactoring\((.*)\):)/,
 		bump: BumpType.Minor,
-	},
-	{
-		test: /(.*)(revert:|revert\((.*)\):)/,
-		bump: BumpType.Patch,
 	},
 	{
 		test: /(.*)(style:|style\((.*)\):)/,
@@ -50,18 +48,20 @@ export const bumpMapping = [
 		bump: BumpType.Minor,
 	},
 	{
-		test: /(.*)(docs:|docs\((.*)\):|doc:|doc\((.*)\):)/,
+		test: /(.*)(fix:|fix\((.*)\):)/,
 		bump: BumpType.Patch,
 	},
 	{
-		test: /(.*)(BREAKING CHANGE:|BREAKING CHANGE\((.*)\):)/,
-		bump: BumpType.Major,
-		scanBody: true,
+		test: /(.*)(chore:|chore\((.*)\):)/,
+		bump: BumpType.Patch,
 	},
 	{
-		test: /BREAKING CHANGE/i,
-		bump: BumpType.Major,
-		scanBody: true,
+		test: /(.*)(revert:|revert\((.*)\):)/,
+		bump: BumpType.Patch,
+	},
+	{
+		test: /(.*)(docs:|docs\((.*)\):|doc:|doc\((.*)\):)/,
+		bump: BumpType.Patch,
 	},
 ]
 

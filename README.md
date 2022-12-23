@@ -6,7 +6,7 @@ Motivation behind is to get rid of huge dependencies and over-kill implementatio
 
 ## TL;DR
 
-`npx --package @sladg/release-utils release-utils help`
+`npx --package @sladg/release-utils utils help`
 
 ## Guess
 
@@ -16,7 +16,7 @@ Simple CLI command that takes commit message and current version and outputs (st
 
 Similar to guess command, however, it automatically tags a commit on current branch and creates release branch for you so hooking up pipelines is as simple as it can be. Version is automatically bumped in common NPM and PHP files (package.json, package-lock.json and composer.json).
 
-Simply call `npx --package @sladg/release-utils release-utils shipit` on any branch and be done.
+Simply call `npx --package @sladg/release-utils utils shipit` on any branch and be done.
 
 ## Changelog
 
