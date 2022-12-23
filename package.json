@@ -1,6 +1,6 @@
 {
   "name": "@sladg/release-utils",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "Simple set of npx commands to automate git flow.",
   "repository": {
     "type": "git",
