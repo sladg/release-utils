@@ -21,3 +21,7 @@ Simply call `npx --package @sladg/release-utils utils shipit` on any branch and 
 ## Changelog
 
 Simple utility that compares two tags and outputs commits between those two tags. It's intended to be used in CI/CD pipelines to generate changelog for release notes. If you are using using `shipit` command, use `--changelog` flag instead.
+
+## Commit
+
+One-liner for `commitizen` that allows you to commit changes in a standardized way. It uses `cz-emoji-conventional` inside and no additional configuration files are necessary.
