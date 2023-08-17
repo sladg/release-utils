@@ -95,6 +95,7 @@ export const replaceVersionInCommonFiles = (
   oldVersion: string,
   newVersion: string,
 ) => {
+  // @TODO: Implement replace with path. Aka. package.json:version
   const results = replaceInFileSync({
     allowEmptyPaths: true,
     ignore: [

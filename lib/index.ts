@@ -5,6 +5,7 @@ import path from 'path'
 
 import packageJson from '../package.json'
 import { changelogHandler } from './cli/changelog'
+import { commitHandler } from './cli/commit'
 import { guessHandler } from './cli/guess'
 import { shipitHandler } from './cli/shipit'
 import { wrapProcess } from './utils'
@@ -128,11 +129,12 @@ program
 
 program
   .command('commit')
-  //
   .description('Commit changes to git.')
-  .option('')
-  .action(async () => {
-    //
+  .option('--cwd <path>', 'Path to your project.', commandCwd)
+  .action(async (options) => {
+    console.log('Our config is: ', options)
+    const { cwd } = options
+    wrapProcess(commitHandler({ cwd }))
   })
 
 program.parse(process.argv)

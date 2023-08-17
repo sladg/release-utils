@@ -15,12 +15,16 @@
     "dist"
   ],
   "scripts": {
-    "lint:check": "eslint --ext .ts . && tsc --noEmit",
-    "lint:fix": "eslint --ext .ts . --fix",
     "prebuild": "rm -rf dist",
     "build": "tsup lib/index.ts",
     "commit": "npx --package cz-emoji-conventional --package commitizen -- cz",
+    "lint:check": "eslint --ext .ts . && tsc --noEmit",
+    "lint:fix": "eslint --ext .ts . --fix",
     "release": "node ./dist/index.js shipit --gitUser @sladg --gitEmail jan@ssoukup.com --changelog"
+  },
+  "dependencies": {
+    "commitizen": "^4.3.0",
+    "cz-emoji-conventional": "^1.0.2"
   },
   "devDependencies": {
     "@sladg/eslint-config-base": "^1.3.0",
