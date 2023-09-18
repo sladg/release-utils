@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [v1.3.0](https://github.com/sladg/release-utils/compare/v1.2.2...v1.3.0)
+
+* ✨ feat(shipit): allow for non-existing tags, includes first in repo automaticallyt [[69f4ce4bb36c4005e539cc74e56ee61032635f60](https://github.com/sladg/release-utils/commit/69f4ce4bb36c4005e539cc74e56ee61032635f60))]
+
+
 ## [v1.2.2](https://github.com/sladg/release-utils/compare/v1.2.1...v1.2.2)
 
 * 📝 docs(commit): added documentation for commit cmd [[fff45bba107c9e9e74a5865a1563f2c51eed6d0f](https://github.com/sladg/release-utils/commit/fff45bba107c9e9e74a5865a1563f2c51eed6d0f))]
@@ -39,6 +44,7 @@
 
 ## [v0.0.1](https://github.com/sladg/release-utils/compare/v0.0.1)
 
+* ✨ feat(shipit): allow for non-existing tags, includes first in repo automaticallyt [[69f4ce4bb36c4005e539cc74e56ee61032635f60](https://github.com/sladg/release-utils/commit/69f4ce4bb36c4005e539cc74e56ee61032635f60))]
 * 📝 docs(commit): added documentation for commit cmd [[fff45bba107c9e9e74a5865a1563f2c51eed6d0f](https://github.com/sladg/release-utils/commit/fff45bba107c9e9e74a5865a1563f2c51eed6d0f))]
 * 🧹 chore(security): audit fix to remove vulnerabilities [[235247e4c7a2ad4b00198afdb3cc75b85501a146](https://github.com/sladg/release-utils/commit/235247e4c7a2ad4b00198afdb3cc75b85501a146))]
 * ✨ feat(commit): implemented new command to allow for unified commits [[1ff5324a4df18b43308310142f99c142a887ae77](https://github.com/sladg/release-utils/commit/1ff5324a4df18b43308310142f99c142a887ae77))]
