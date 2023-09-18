@@ -1,6 +1,7 @@
 import { replaceInFileSync } from 'replace-in-file'
 import semver from 'semver'
 import semverRegex from 'semver-regex'
+import type { Response, SimpleGit } from 'simple-git'
 
 export enum BumpType {
   Patch = 'patch',
@@ -158,7 +159,8 @@ export const sortTagsDescending = (tags: string[]) =>
     return semver.rcompare(sv1, sv2)
   })
 
-export const findHighestTag = (tags: string[]) => sortTagsDescending(tags)[0]
+export const findHighestTag = (tags: string[]): string | undefined =>
+  sortTagsDescending(tags)[0]
 
 export const getCommitLink = (remoteUrl: string, commit: string) => {
   if (remoteUrl.includes('bitbucket.org')) {
@@ -188,4 +190,28 @@ export const getCompareLink = (
   }
 
   return null
+}
+
+export const getTagsWithFallback = async (
+  git: Response<unknown> | SimpleGit,
+) => {
+  let tags = await git.fetch(['--tags']).tags({ '--sort': '-creatordate' })
+
+  // In case there are no tags in repository, we add the first tag to older commit we can find.
+  if (tags.all.length < 1) {
+    console.log('No tags found, adding first tag ...')
+
+    await git.fetch()
+
+    const commits = await git.log({
+      '--max-count': 200,
+    })
+
+    const firstCommit = commits.all[commits.all.length - 1].hash
+    await git.tag(['0.0.0', firstCommit])
+
+    tags = await git.fetch(['--tags']).tags({ '--sort': '-creatordate' })
+  }
+
+  return tags
 }

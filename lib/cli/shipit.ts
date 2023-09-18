@@ -6,6 +6,7 @@ import {
   bumpMapping,
   BumpType,
   findHighestTag,
+  getTagsWithFallback,
   isValidTag,
   replaceVersionInCommonFiles,
 } from '../utils'
@@ -39,21 +40,19 @@ export const shipitHandler = async ({
     .addConfig('user.name', gitUser)
     .addConfig('user.email', gitEmail)
 
-  // @TODO: Implement check so if no valid tag exists, it will tag first commit in repo.
-
   // Fetch tags to ensure we have the latest ones.
-  const tags = await git.fetch(['--tags']).tags({ '--sort': '-creatordate' })
-  const log = await git.log({ '--max-count': 20 })
+  const tags = await getTagsWithFallback(git)
+  const log = await git.log({ '--max-count': 200 })
   const branch = await git.branch()
   const [remote] = await git.getRemotes()
 
   const latestCommit = log.latest?.hash
 
-  const latestTag = findHighestTag(tags.all)
-  const currentTag = latestTag.replace(tagPrefix, '')
-
-  console.log('Latest commit: ', latestCommit)
+  const latestTag = findHighestTag(tags.all) ?? '0.0.0'
   console.log('Current version: ', latestTag)
+
+  const currentTag = latestTag.replace(tagPrefix, '')
+  console.log('Latest commit: ', latestCommit)
 
   if (!isValidTag(latestTag, tagPrefix)) {
     throw new Error(`Invalid tag found - ${latestTag}!`)
