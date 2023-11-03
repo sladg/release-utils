@@ -22,6 +22,7 @@ interface Props {
   forceBump: boolean
   generateChangelog: boolean
   changelogPath: string
+  branchPrefixes: string[]
 }
 
 export const shipitHandler = async ({
@@ -34,6 +35,7 @@ export const shipitHandler = async ({
   releaseBranchPrefix,
   generateChangelog,
   changelogPath,
+  branchPrefixes,
 }: Props) => {
   const gitWithoutAuthor = simpleGit()
   const git = gitWithoutAuthor
@@ -98,7 +100,12 @@ export const shipitHandler = async ({
     currentTag,
   )
   const nextTagWithPrefix = tagPrefix + nextTag
-  const releaseBranch = `${releaseBranchPrefix}${nextTagWithPrefix}`
+  const releaseBranches = branchPrefixes.map(
+    (a) =>
+      // Creates `release/api-1.0.0`
+      `${releaseBranchPrefix}${a.length ? a + '-' : ''}${nextTagWithPrefix}`,
+  )
+
   console.log(`Next version is - ${nextTagWithPrefix}!`)
 
   if (currentTag === nextTag) {
@@ -128,13 +135,16 @@ export const shipitHandler = async ({
 
   // As current branch commit includes skip ci flag, we want to ommit this flag for release branch so pipeline can run (omitting infinite loop).
   // So we are overwriting last commit message and pushing to release branch.
-  await git
-    //
-    .raw('commit', '--message', `Release: ${nextTagWithPrefix}`, '--amend')
-    .push(remote.name, `${branch.current}:${releaseBranch}`)
+  for (const index in releaseBranches) {
+    const releaseBranch = releaseBranches[index]
+    await git
+      //
+      .raw('commit', '--message', `Release: ${nextTagWithPrefix}`, '--amend')
+      .push(remote.name, `${branch.current}:${releaseBranch}`)
+
+    console.log(`Successfuly tagged and created new branch - ${releaseBranch}`)
+  }
 
   // @Note: CI/CD should not be listening for tags in master, it should listen to release branch.
   // @TODO: Include commits and commit bodies in release commit so Jira can pick it up.
-
-  console.log(`Successfuly tagged and created new branch - ${releaseBranch}`)
 }

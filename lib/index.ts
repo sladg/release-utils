@@ -84,6 +84,11 @@ program
     'User email to be used for commits.',
     'bender@bot.eu',
   )
+  .option(
+    '--branchPrefixes <prefix01>,<prefix02>',
+    'Comma separated list of prefixes for branches to be ignored.',
+    '',
+  )
   .option('--changelog', 'Generate changelog.', false)
   .action(async (options) => {
     console.log('Our config is: ', options)
@@ -96,6 +101,7 @@ program
       gitUser,
       gitEmail,
       changelog,
+      branchPrefixes,
     } = options
     wrapProcess(
       shipitHandler({
@@ -107,6 +113,7 @@ program
         forceBump,
         releaseBranchPrefix,
         generateChangelog: changelog,
+        branchPrefixes: branchPrefixes.split(','),
         changelogPath: path.resolve(commandCwd, './CHANGELOG.md'),
       }),
     )
