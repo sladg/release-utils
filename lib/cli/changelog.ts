@@ -1,26 +1,19 @@
 import { writeFileSync } from 'fs'
 import { DefaultLogFields, simpleGit } from 'simple-git'
 
-import { getCommitLink, getCompareLink, sortTagsDescending } from '../utils'
+import {
+  detectGitRemoteFromEnv,
+  getCommitLink,
+  getCompareLink,
+  providerFromUrl,
+  sortTagsDescending,
+} from '../utils'
 
 interface Props {
   outputFile: string
   gitBaseUrl?: string
   nextTag?: string
 }
-
-const isGithub =
-  !!process.env.GITHUB_REPOSITORY && !!process.env.GITHUB_SERVER_URL
-const isBitbucket = !!process.env.BITBUCKET_GIT_HTTP_ORIGIN
-const isGitlab = !!process.env.CI_PROJECT_URL
-
-const httpGitUrl = isGithub
-  ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`
-  : isBitbucket
-  ? process.env.BITBUCKET_GIT_HTTP_ORIGIN
-  : isGitlab
-  ? process.env.CI_PROJECT_URL
-  : null
 
 export const changelogHandler = async ({
   outputFile,
@@ -29,9 +22,19 @@ export const changelogHandler = async ({
 }: Props) => {
   const git = simpleGit()
 
-  const gitUrl = gitBaseUrl ?? httpGitUrl
+  // CI env is authoritative (handles self-hosted hosts); an explicit
+  // gitBaseUrl override falls back to host-based provider inference.
+  const fromEnv = detectGitRemoteFromEnv()
+  const gitUrl = gitBaseUrl ?? fromEnv?.url
   if (!gitUrl) {
     throw new Error('Could not determine git base URL!')
+  }
+
+  const provider = gitBaseUrl ? providerFromUrl(gitBaseUrl) : fromEnv?.provider
+  if (!provider) {
+    throw new Error(
+      `Could not determine git provider from "${gitUrl}". Supported: GitHub, GitLab, Bitbucket. Pass a recognizable --gitBaseUrl or run inside CI.`,
+    )
   }
 
   await git.fetch(['--tags'])
@@ -68,7 +71,7 @@ export const changelogHandler = async ({
       tag,
       log: filteredLog,
       authors: Object.values(authors),
-      urlToGitDiff: getCompareLink(gitUrl, lowerTag, tag),
+      urlToGitDiff: getCompareLink(provider, gitUrl, lowerTag, tag),
     }
   })
 
@@ -86,7 +89,11 @@ export const changelogHandler = async ({
 
     logs.forEach((b) => {
       changelog.push(
-        `* ${b.message} \[[${b.hash}](${getCommitLink(gitUrl, b.hash)})\]`,
+        `* ${b.message} \[[${b.hash}](${getCommitLink(
+          provider,
+          gitUrl,
+          b.hash,
+        )})\]`,
       )
     })
   })

@@ -9,6 +9,12 @@ export enum BumpType {
   Major = 'major',
 }
 
+export enum GitProvider {
+  Github = 'github',
+  Gitlab = 'gitlab',
+  Bitbucket = 'bitbucket',
+}
+
 export const bumpMapping = [
   {
     test: /(.*)(BREAKING CHANGE:|BREAKING CHANGE\((.*)\):)/,
@@ -66,6 +72,9 @@ export const bumpMapping = [
   },
 ]
 
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 export const isValidTag = (tag: string, prefix: string) => {
   // Replace "v" in case used for tagging.
   const normalizedTag = tag.replace(prefix, '')
@@ -118,6 +127,8 @@ export const replaceVersionInCommonFiles = (
       // 'composer.lock', Composer2 lock file does not include version from composer.json
       'pyproject.toml',
       '**/__init__.py',
+      'Chart.yaml',
+      '**/Chart.yaml', // Helm chart — bump appVersion (the deployed app version).
     ],
     from: [
       /\"version\":(.*)"\d+\.\d+\.\d+"/, // little more generic to allow for incorrect version to be replaced
@@ -125,6 +136,8 @@ export const replaceVersionInCommonFiles = (
       `"version":"${oldVersion}"`, // uglified npm/php style
       `version = "${oldVersion}"`, // python style
       `__version__ = '${oldVersion}'`, // python style
+      // Helm appVersion — quoted or unquoted, normalized to quoted on bump.
+      new RegExp(`appVersion:\\s*["']?${escapeRegExp(oldVersion)}["']?`),
     ],
     to: [
       `"version": "${newVersion}"`,
@@ -132,7 +145,7 @@ export const replaceVersionInCommonFiles = (
       `"version":"${newVersion}"`,
       `version = "${newVersion}"`,
       `__version__ = '${newVersion}'`,
-      //
+      `appVersion: "${newVersion}"`,
     ],
   })
 
@@ -162,35 +175,77 @@ export const sortTagsDescending = (tags: string[]) =>
 export const findHighestTag = (tags: string[]): string | undefined =>
   sortTagsDescending(tags)[0]
 
-export const getCommitLink = (remoteUrl: string, commit: string) => {
-  if (remoteUrl.includes('bitbucket.org')) {
-    return `${remoteUrl}/commits/${commit}`
+/** Resolves the remote URL + provider from CI env vars. Authoritative for
+ *  self-hosted instances, whose domains can't be inferred from the host. */
+export const detectGitRemoteFromEnv = (): {
+  url: string
+  provider: GitProvider
+} | null => {
+  if (process.env.GITHUB_REPOSITORY && process.env.GITHUB_SERVER_URL) {
+    return {
+      url: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`,
+      provider: GitProvider.Github,
+    }
   }
-
-  if (remoteUrl.includes('github.com')) {
-    return `${remoteUrl}/commit/${commit})`
+  if (process.env.BITBUCKET_GIT_HTTP_ORIGIN) {
+    return {
+      url: process.env.BITBUCKET_GIT_HTTP_ORIGIN,
+      provider: GitProvider.Bitbucket,
+    }
   }
-
+  if (process.env.CI_PROJECT_URL) {
+    return { url: process.env.CI_PROJECT_URL, provider: GitProvider.Gitlab }
+  }
   return null
 }
 
+/** Provider inference from a host — only reliable for the public SaaS domains.
+ *  Self-hosted instances must be resolved via detectGitRemoteFromEnv. */
+const URL_PROVIDER_MATCHERS: ReadonlyArray<[string, GitProvider]> = [
+  ['github.com', GitProvider.Github],
+  ['bitbucket.org', GitProvider.Bitbucket],
+  ['gitlab', GitProvider.Gitlab],
+]
+
+export const providerFromUrl = (url: string): GitProvider | null =>
+  URL_PROVIDER_MATCHERS.find(([host]) => url.includes(host))?.[1] ?? null
+
+const refRange = (previous: string, next: string) =>
+  previous ? `${previous}...${next}` : next
+
+const COMMIT_LINK_BUILDERS: Record<
+  GitProvider,
+  (url: string, commit: string) => string
+> = {
+  [GitProvider.Github]: (url, commit) => `${url}/commit/${commit}`,
+  [GitProvider.Gitlab]: (url, commit) => `${url}/-/commit/${commit}`,
+  [GitProvider.Bitbucket]: (url, commit) => `${url}/commits/${commit}`,
+}
+
+const COMPARE_LINK_BUILDERS: Record<
+  GitProvider,
+  (url: string, previous: string, next: string) => string
+> = {
+  [GitProvider.Github]: (url, previous, next) =>
+    `${url}/compare/${refRange(previous, next)}`,
+  [GitProvider.Gitlab]: (url, previous, next) =>
+    `${url}/-/compare/${refRange(previous, next)}`,
+  [GitProvider.Bitbucket]: (url, previous, next) =>
+    `${url}/branches/compare/${previous ? `${next}%0D${previous}` : next}`,
+}
+
+export const getCommitLink = (
+  provider: GitProvider,
+  remoteUrl: string,
+  commit: string,
+) => COMMIT_LINK_BUILDERS[provider](remoteUrl, commit)
+
 export const getCompareLink = (
+  provider: GitProvider,
   remoteUrl: string,
   previous: string,
   next: string,
-) => {
-  if (remoteUrl.includes('bitbucket.org')) {
-    const formattedPrevious = previous ? `${next}%0D${previous}` : next
-    return `${remoteUrl}/branches/compare/${formattedPrevious}`
-  }
-
-  if (remoteUrl.includes('github.com')) {
-    const formattedPath = previous ? `${previous}...${next}` : next
-    return `${remoteUrl}/compare/${formattedPath}`
-  }
-
-  return null
-}
+) => COMPARE_LINK_BUILDERS[provider](remoteUrl, previous, next)
 
 export const getTagsWithFallback = async (
   git: Response<unknown> | SimpleGit,
