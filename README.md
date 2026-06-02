@@ -6,6 +6,8 @@ Language-agnostic: bumps versions across Node, PHP, Rust, Python, Dart/Flutter, 
 
 Built to avoid the bulk and complexity of tools like @auto-it or release-it.
 
+> Requires **Node.js >= 20**.
+
 ```bash
 npx --package @sladg/release-utils utils help
 ```
