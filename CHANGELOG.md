@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [v1.6.0](https://github.com/sladg/release-utils/compare/v1.5.0...v1.6.0)
+
+* ✨ feat(versioning): structural multi-language version bumping [[03a6aea511462e7728a43fb03fe54a79ed3d0e3d](https://github.com/sladg/release-utils/commit/03a6aea511462e7728a43fb03fe54a79ed3d0e3d)]
+
+
 ## [v1.5.0](https://github.com/sladg/release-utils/compare/v1.4.0...v1.5.0)
 
 * ✨ feat(gitlab support): added mapping for gitlab (cloud + self-hosted) instances [[37e7787b1518f5f3106922670612f6af53b80117](https://github.com/sladg/release-utils/commit/37e7787b1518f5f3106922670612f6af53b80117)]
@@ -54,6 +59,7 @@
 
 ## [v0.0.1](https://github.com/sladg/release-utils/compare/v0.0.1)
 
+* ✨ feat(versioning): structural multi-language version bumping [[03a6aea511462e7728a43fb03fe54a79ed3d0e3d](https://github.com/sladg/release-utils/commit/03a6aea511462e7728a43fb03fe54a79ed3d0e3d)]
 * ✨ feat(gitlab support): added mapping for gitlab (cloud + self-hosted) instances [[37e7787b1518f5f3106922670612f6af53b80117](https://github.com/sladg/release-utils/commit/37e7787b1518f5f3106922670612f6af53b80117)]
 * ✨ feat(multiple branches): allow master to be forked to multiple branches by prefix [[4798a8e6136baf1d0300190445eb657c64fa099b](https://github.com/sladg/release-utils/commit/4798a8e6136baf1d0300190445eb657c64fa099b)]
 * ✨ feat(shipit): allow for non-existing tags, includes first in repo automaticallyt [[69f4ce4bb36c4005e539cc74e56ee61032635f60](https://github.com/sladg/release-utils/commit/69f4ce4bb36c4005e539cc74e56ee61032635f60)]
