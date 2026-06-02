@@ -1,4 +1,3 @@
-import { replaceInFileSync } from 'replace-in-file'
 import semver from 'semver'
 import semverRegex from 'semver-regex'
 import type { Response, SimpleGit } from 'simple-git'
@@ -72,9 +71,6 @@ export const bumpMapping = [
   },
 ]
 
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
 export const isValidTag = (tag: string, prefix: string) => {
   // Replace "v" in case used for tagging.
   const normalizedTag = tag.replace(prefix, '')
@@ -101,60 +97,14 @@ export const bumpCalculator = (version: string, bumpType: BumpType) => {
   throw new Error(`Unknown bump type - ${bumpType}!`)
 }
 
-export const replaceVersionInCommonFiles = (
-  oldVersion: string,
-  newVersion: string,
-) => {
-  // @TODO: Implement replace with path. Aka. package.json:version
-  const results = replaceInFileSync({
-    allowEmptyPaths: true,
-    ignore: [
-      '**/node_modules/**',
-      '**/.venv/**',
-      '**/vendor/**',
-      '**/.git/**',
-      //
-    ],
-    files: [
-      'package.json',
-      '**/package.json', // Useful for workspaces with nested package.jsons also including versions.
-      // @TODO: Do not use until https://github.com/sladg/release-utils/issues/2 is fixed.
-      // 'package-lock.json',
-      // 'package-lock.json', // Duplicate because lock file contains two occurences.
-      // 'yarn.lock', Yarn3 lock file does not contain version from package.json
-      'composer.json',
-      '**/composer.json', // Useful for workspaces with nested composer.jsons also including versions.
-      // 'composer.lock', Composer2 lock file does not include version from composer.json
-      'pyproject.toml',
-      '**/__init__.py',
-      'Chart.yaml',
-      '**/Chart.yaml', // Helm chart — bump appVersion (the deployed app version).
-    ],
-    from: [
-      /\"version\":(.*)"\d+\.\d+\.\d+"/, // little more generic to allow for incorrect version to be replaced
-      `"version": "${oldVersion}"`, // npm/php style
-      `"version":"${oldVersion}"`, // uglified npm/php style
-      `version = "${oldVersion}"`, // python style
-      `__version__ = '${oldVersion}'`, // python style
-      // Helm appVersion — quoted or unquoted, normalized to quoted on bump.
-      new RegExp(`appVersion:\\s*["']?${escapeRegExp(oldVersion)}["']?`),
-    ],
-    to: [
-      `"version": "${newVersion}"`,
-      `"version": "${newVersion}"`,
-      `"version":"${newVersion}"`,
-      `version = "${newVersion}"`,
-      `__version__ = '${newVersion}'`,
-      `appVersion: "${newVersion}"`,
-    ],
-  })
-
-  return results
-}
-
-export const wrapProcess = async (fn: Promise<any>) => {
+export const wrapProcess = async (fn: Promise<unknown>) => {
   try {
-    await fn
+    // Handlers return their result (e.g. the next version); print it to stdout
+    // so it can be captured. Side-effect-only handlers return undefined.
+    const result = await fn
+    if (result !== undefined) {
+      console.log(result)
+    }
   } catch (e) {
     console.error('Process failed with error:', e)
     process.exit(1)
@@ -249,11 +199,16 @@ export const getCompareLink = (
 
 export const getTagsWithFallback = async (
   git: Response<unknown> | SimpleGit,
+  failOnMissingTag: boolean,
 ) => {
   let tags = await git.fetch(['--tags']).tags({ '--sort': '-creatordate' })
 
   // In case there are no tags in repository, we add the first tag to older commit we can find.
   if (tags.all.length < 1) {
+    if (failOnMissingTag) {
+      throw new Error('No semver tag found in repository.')
+    }
+
     console.log('No tags found, adding first tag ...')
 
     await git.fetch()

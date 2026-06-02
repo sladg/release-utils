@@ -1,27 +1,41 @@
 # Release utils
 
-This package exposes two CLI functions intended to deal with versioning your application and releasing.
+Tiny `npx` commands to automate your git release flow — guess the next version, tag & branch a release, generate a changelog, and commit with a prompt.
 
-Motivation behind is to get rid of huge dependencies and over-kill implementations such as @auto-it, release-it or semver. Those are bulky and unncessarily complex.
+Language-agnostic: bumps versions across Node, PHP, Rust, Python, Dart/Flutter, Helm, Deno, Ansible and more.
 
-## TL;DR
+Built to avoid the bulk and complexity of tools like @auto-it or release-it.
 
-`npx --package @sladg/release-utils utils help`
+```bash
+npx --package @sladg/release-utils utils help
+```
 
-## Guess
+## Commands
 
-Simple CLI command that takes commit message and current version and outputs (stdout) next version based on keywords inside commit message.
+**`guess`** — print the next version (to stdout) based on a commit message.
 
-## Shipit
+```bash
+npx --package @sladg/release-utils utils guess "feat: add login" v1.2.3   # -> v1.3.0
+```
 
-Similar to guess command, however, it automatically tags a commit on current branch and creates release branch for you so hooking up pipelines is as simple as it can be. Version is automatically bumped in common NPM and PHP files (package.json, package-lock.json and composer.json).
+**`shipit`** — bump the version across your manifest files, tag the commit, and push a `release/` branch. Works across many ecosystems out of the box — Node, PHP, Rust, Python, Dart/Flutter, Helm, Deno, Ansible and more.
 
-Simply call `npx --package @sladg/release-utils utils shipit` on any branch and be done.
+```bash
+npx --package @sladg/release-utils utils shipit --changelog
+```
 
-## Changelog
+**`changelog`** — write `CHANGELOG.md`, grouped by tag with GitHub/GitLab/Bitbucket links.
 
-Simple utility that compares two tags and outputs commits between those two tags. It's intended to be used in CI/CD pipelines to generate changelog for release notes. If you are using using `shipit` command, use `--changelog` flag instead.
+```bash
+npx --package @sladg/release-utils utils changelog
+```
 
-## Commit
+**`commit`** — interactive `commitizen` prompt (emoji + conventional), no config needed.
 
-One-liner for `commitizen` that allows you to commit changes in a standardized way. It uses `cz-emoji-conventional` inside and no additional configuration files are necessary.
+```bash
+git add . && npx --package @sladg/release-utils utils commit
+```
+
+## More
+
+Advanced flags, monorepo usage, and the full list of supported version files (`package.json`, `Cargo.toml`, `pyproject.toml`, `Chart.yaml`, …) are in **[USAGE.md](./USAGE.md)**.

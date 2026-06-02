@@ -26,5 +26,5 @@ export const guessHandler = async ({
   )
   const nextTagWithPrefix = tagPrefix + nextTag
 
-  console.log(nextTagWithPrefix)
+  return nextTagWithPrefix
 }

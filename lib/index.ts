@@ -35,7 +35,6 @@ program
     'v',
   )
   .action(async (commitMessage, latestVersion, options) => {
-    console.log('Our config is: ', options)
     const { tagPrefix } = options
     wrapProcess(guessHandler({ commitMessage, latestVersion, tagPrefix }))
   })
@@ -91,7 +90,6 @@ program
   )
   .option('--changelog', 'Generate changelog.', false)
   .action(async (options) => {
-    console.log('Our config is: ', options)
     const {
       tagPrefix,
       failOnMissingCommit,
@@ -129,7 +127,6 @@ program
   )
   .option('--gitBaseUrl <url>', 'Absolute URL to your git project', undefined)
   .action(async (options) => {
-    console.log('Our config is: ', options)
     const { outputFile, gitBaseUrl } = options
     wrapProcess(changelogHandler({ outputFile, gitBaseUrl }))
   })
@@ -139,7 +136,6 @@ program
   .description('Commit changes to git.')
   .option('--cwd <path>', 'Path to your project.', commandCwd)
   .action(async (options) => {
-    console.log('Our config is: ', options)
     const { cwd } = options
     wrapProcess(commitHandler({ cwd }))
   })

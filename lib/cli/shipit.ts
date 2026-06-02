@@ -8,8 +8,8 @@ import {
   findHighestTag,
   getTagsWithFallback,
   isValidTag,
-  replaceVersionInCommonFiles,
 } from '../utils'
+import { replaceVersionInCommonFiles } from '../version'
 import { changelogHandler } from './changelog'
 
 interface Props {
@@ -43,7 +43,7 @@ export const shipitHandler = async ({
     .addConfig('user.email', gitEmail)
 
   // Fetch tags to ensure we have the latest ones.
-  const tags = await getTagsWithFallback(git)
+  const tags = await getTagsWithFallback(git, failOnMissingTag)
   const log = await git.log({ '--max-count': 200 })
   const branch = await git.branch()
   const [remote] = await git.getRemotes()
@@ -112,7 +112,7 @@ export const shipitHandler = async ({
     throw new Error('Failed to bump version!')
   }
 
-  const replacementResults = replaceVersionInCommonFiles(currentTag, nextTag)
+  const replacementResults = replaceVersionInCommonFiles(nextTag)
   console.log(`Replaced version in files.`, replacementResults)
 
   // If flag is passed, changelog is generated and added.
