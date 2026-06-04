@@ -75,7 +75,8 @@ const versionFiles: ReadonlyArray<VersionFileRule> = [
   {
     files: ['Chart.yaml', '**/Chart.yaml'],
     format: 'yaml',
-    paths: [['version'], ['appVersion']],
+    // chart `version` tracks template changes, not app releases — only appVersion follows the app semver.
+    paths: [['appVersion']],
   },
   // Dart / Flutter.
   {

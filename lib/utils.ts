@@ -72,11 +72,11 @@ export const bumpMapping = [
 ]
 
 export const isValidTag = (tag: string, prefix: string) => {
-  // Replace "v" in case used for tagging.
-  const normalizedTag = tag.replace(prefix, '')
-  const [major, minor, patch] = normalizedTag.split('.').map(Number).map(isNaN)
+  // Strip the prefix from the front only (not anywhere it happens to occur).
+  const normalizedTag = tag.startsWith(prefix) ? tag.slice(prefix.length) : tag
+  const parts = normalizedTag.split('.')
 
-  return !major && !minor && !patch
+  return parts.length === 3 && parts.every((p) => p !== '' && !isNaN(Number(p)))
 }
 
 export const bumpCalculator = (version: string, bumpType: BumpType) => {

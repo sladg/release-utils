@@ -20,6 +20,8 @@
     "commit": "node ./dist/index.js commit",
     "lint:check": "eslint --ext .ts . && tsc --noEmit",
     "lint:fix": "eslint --ext .ts . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release": "node ./dist/index.js shipit --gitUser @sladg --gitEmail jan@ssoukup.com --changelog"
   },
   "dependencies": {
@@ -40,6 +42,7 @@
     "tinyglobby": "^0.2.17",
     "tsup": "^7.2.0",
     "typescript": "5.1",
+    "vitest": "^4.1.8",
     "yaml": "^2.9.0"
   },
   "engines": {
