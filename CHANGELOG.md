@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [v2.0.1](https://github.com/sladg/release-utils/compare/v2.0.0...v2.0.1)
+
+* 🐛 fix(helm): do not update version inside helm, only appVersion [[25f19b684ec583bf13526bb6ed701c2394f5490f](https://github.com/sladg/release-utils/commit/25f19b684ec583bf13526bb6ed701c2394f5490f)]
+
+
 ## [v2.0.0](https://github.com/sladg/release-utils/compare/v1.6.0...v2.0.0)
 
 * 🧹 chore(nodejs): version requirement bumped [[15e6f9a26483eebfe418bfed6db2992d49a169be](https://github.com/sladg/release-utils/commit/15e6f9a26483eebfe418bfed6db2992d49a169be)]
@@ -64,6 +69,7 @@
 
 ## [v0.0.1](https://github.com/sladg/release-utils/compare/v0.0.1)
 
+* 🐛 fix(helm): do not update version inside helm, only appVersion [[25f19b684ec583bf13526bb6ed701c2394f5490f](https://github.com/sladg/release-utils/commit/25f19b684ec583bf13526bb6ed701c2394f5490f)]
 * 🧹 chore(nodejs): version requirement bumped [[15e6f9a26483eebfe418bfed6db2992d49a169be](https://github.com/sladg/release-utils/commit/15e6f9a26483eebfe418bfed6db2992d49a169be)]
 * ✨ feat(versioning): structural multi-language version bumping [[03a6aea511462e7728a43fb03fe54a79ed3d0e3d](https://github.com/sladg/release-utils/commit/03a6aea511462e7728a43fb03fe54a79ed3d0e3d)]
 * ✨ feat(gitlab support): added mapping for gitlab (cloud + self-hosted) instances [[37e7787b1518f5f3106922670612f6af53b80117](https://github.com/sladg/release-utils/commit/37e7787b1518f5f3106922670612f6af53b80117)]
