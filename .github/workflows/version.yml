@@ -6,28 +6,21 @@ on:
 jobs:
   deployment:
     environment: production
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        node-version: [14.x]
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Prepare repository
         run: git fetch --unshallow --tags
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: moonrepo/setup-toolchain@v0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          auto-install: true
       - name: Install dependencies
-        run: npm ci
-      - name: Build CLI
-        run: npm run build
+        run: bun install
       - name: Release
-        run: npm run release
+        run: moon run :release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: JS-DevTools/npm-publish@v1
+      - uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
