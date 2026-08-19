@@ -1,11 +1,9 @@
+import type { VersionApplier } from './types'
 import { parseDocument } from 'yaml'
 
-import type { VersionApplier } from './types'
-
 // YAML keeps comments/formatting via the document model (setIn mutates in place).
-export const applyYaml: VersionApplier = (text, paths, version) => {
-  const doc = parseDocument(text)
-  const changed = paths
+const applyPaths = (doc: ReturnType<typeof parseDocument>, paths: string[][], version: string) =>
+  paths
     .map((path) => {
       if (!doc.hasIn(path)) return false
       doc.setIn(path, version)
@@ -13,5 +11,11 @@ export const applyYaml: VersionApplier = (text, paths, version) => {
     })
     .some(Boolean)
 
-  return { content: changed ? doc.toString() : text, changed }
+const applyYaml: VersionApplier = (text, paths, version) => {
+  const doc = parseDocument(text)
+  const changed = applyPaths(doc, paths, version)
+  if (!changed) return { content: text, changed }
+  return { content: doc.toString(), changed }
 }
+
+export { applyPaths, applyYaml }

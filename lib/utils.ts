@@ -1,149 +1,147 @@
+import type { Response, SimpleGit } from 'simple-git'
+import { is } from '@sladg/what-that'
 import semver from 'semver'
 import semverRegex from 'semver-regex'
-import type { Response, SimpleGit } from 'simple-git'
 
-export enum BumpType {
+enum BumpType {
   Patch = 'patch',
   Minor = 'minor',
   Major = 'major',
 }
 
-export enum GitProvider {
+enum GitProvider {
   Github = 'github',
   Gitlab = 'gitlab',
   Bitbucket = 'bitbucket',
 }
 
-export const bumpMapping = [
+const bumpMapping = [
   {
-    test: /(.*)(BREAKING CHANGE:|BREAKING CHANGE\((.*)\):)/,
+    test: /(?:.*)(?:BREAKING CHANGE:|BREAKING CHANGE\((?:.*)\):)/u,
     bump: BumpType.Major,
     scanBody: true,
   },
   {
-    test: /BREAKING CHANGE/i,
+    test: /BREAKING CHANGE/iu,
     bump: BumpType.Major,
     scanBody: true,
   },
   {
-    test: /(.*)(feat:|feat\((.*)\):|feature:|feature\((.*)\):)/,
+    test: /(?:.*)(?:feat:|feat\((?:.*)\):|feature:|feature\((?:.*)\):)/u,
     bump: BumpType.Minor,
   },
   {
-    test: /(.*)(perf:|perf\((.*)\):)/,
+    test: /(?:.*)(?:perf:|perf\((?:.*)\):)/u,
     bump: BumpType.Minor,
   },
   {
-    test: /(.*)(ref:|ref\((.*)\):|refactor:|refactor\((.*)\):|refactoring:|refactoring\((.*)\):)/,
+    test: /(?:.*)(?:ref:|ref\((?:.*)\):|refactor:|refactor\((?:.*)\):|refactoring:|refactoring\((?:.*)\):)/u,
     bump: BumpType.Minor,
   },
   {
-    test: /(.*)(style:|style\((.*)\):)/,
+    test: /(?:.*)(?:style:|style\((?:.*)\):)/u,
     bump: BumpType.Minor,
   },
   {
-    test: /(.*)(test:|test\((.*)\):|tests:|tests\((.*)\):)/,
+    test: /(?:.*)(?:test:|test\((?:.*)\):|tests:|tests\((?:.*)\):)/u,
     bump: BumpType.Minor,
   },
   {
-    test: /(.*)(ci:|ci\((.*)\):)/,
+    test: /(?:.*)(?:ci:|ci\((?:.*)\):)/u,
     bump: BumpType.Minor,
   },
   {
-    test: /(.*)(build:|build\((.*)\):)/,
+    test: /(?:.*)(?:build:|build\((?:.*)\):)/u,
     bump: BumpType.Minor,
   },
   {
-    test: /(.*)(fix:|fix\((.*)\):)/,
+    test: /(?:.*)(?:fix:|fix\((?:.*)\):)/u,
     bump: BumpType.Patch,
   },
   {
-    test: /(.*)(chore:|chore\((.*)\):)/,
+    test: /(?:.*)(?:chore:|chore\((?:.*)\):)/u,
     bump: BumpType.Patch,
   },
   {
-    test: /(.*)(revert:|revert\((.*)\):)/,
+    test: /(?:.*)(?:revert:|revert\((?:.*)\):)/u,
     bump: BumpType.Patch,
   },
   {
-    test: /(.*)(docs:|docs\((.*)\):|doc:|doc\((.*)\):)/,
+    test: /(?:.*)(?:docs:|docs\((?:.*)\):|doc:|doc\((?:.*)\):)/u,
     bump: BumpType.Patch,
   },
 ]
 
-export const isValidTag = (tag: string, prefix: string) => {
+const isValidTag = (tag: string, prefix: string) => {
   // Strip the prefix from the front only (not anywhere it happens to occur).
-  const normalizedTag = tag.startsWith(prefix) ? tag.slice(prefix.length) : tag
+  let normalizedTag = tag
+  if (tag.startsWith(prefix)) normalizedTag = tag.slice(prefix.length)
   const parts = normalizedTag.split('.')
 
   return parts.length === 3 && parts.every((p) => p !== '' && !isNaN(Number(p)))
 }
 
-export const bumpCalculator = (version: string, bumpType: BumpType) => {
-  const [major, minor, patch] = version.split('.').map(Number)
-
-  if (bumpType === BumpType.Major) {
-    return `${major + 1}.0.0`
+const bumpCalculator = (version: string, bumpType: BumpType): string => {
+  const [major = 0, minor = 0, patch = 0] = version.split('.').map(Number)
+  const bumps: Record<BumpType, string> = {
+    [BumpType.Major]: `${major + 1}.0.0`,
+    [BumpType.Minor]: `${major}.${minor + 1}.0`,
+    [BumpType.Patch]: `${major}.${minor}.${patch + 1}`,
   }
 
-  if (bumpType === BumpType.Minor) {
-    return `${major}.${minor + 1}.0`
-  }
-
-  if (bumpType === BumpType.Patch) {
-    return `${major}.${minor}.${patch + 1}`
-  }
-
-  throw new Error(`Unknown bump type - ${bumpType}!`)
+  return bumps[bumpType]
 }
 
-export const wrapProcess = async (fn: Promise<unknown>) => {
+// Takes a thunk rather than a promise: guess/commit throw synchronously, so
+// passing an already-invoked handler would blow up before this try ever runs.
+const wrapProcess = async (run: () => unknown) => {
   try {
     // Handlers return their result (e.g. the next version); print it to stdout
     // so it can be captured. Side-effect-only handlers return undefined.
-    const result = await fn
-    if (result !== undefined) {
+    const result = await run()
+    if (is.not.undefined(result)) {
       console.log(result)
     }
-  } catch (e) {
-    console.error('Process failed with error:', e)
+  } catch (error) {
+    console.error('Process failed with error:', error)
     process.exit(1)
   }
 }
 
-const isSemverTag = (tag: string) =>
-  semverRegex().exec(tag)?.[0] ? true : false
-const parseTag = (tag: string) => semverRegex().exec(tag)?.[0] ?? '0.0.0'
+const isSemverTag = (tag: string) => Boolean(semverRegex().exec(tag)?.[0])
+const parseTag = (tag: string): string => semverRegex().exec(tag)?.[0] ?? '0.0.0'
 
-export const sortTagsDescending = (tags: string[]) =>
-  tags.filter(isSemverTag).sort((v1, v2) => {
+const sortTagsDescending = (tags: string[]) =>
+  tags.filter(isSemverTag).toSorted((v1, v2) => {
     const sv1 = parseTag(v1)
     const sv2 = parseTag(v2)
-    return semver.rcompare(sv1, sv2)
+    if (semver.gt(sv1, sv2)) return -1
+    if (semver.lt(sv1, sv2)) return 1
+    return 0
   })
 
-export const findHighestTag = (tags: string[]): string | undefined =>
+const findHighestTag = (tags: string[]): string | undefined =>
   sortTagsDescending(tags)[0]
 
 /** Resolves the remote URL + provider from CI env vars. Authoritative for
  *  self-hosted instances, whose domains can't be inferred from the host. */
-export const detectGitRemoteFromEnv = (): {
+const detectGitRemoteFromEnv = (): {
   url: string
   provider: GitProvider
 } | null => {
-  if (process.env.GITHUB_REPOSITORY && process.env.GITHUB_SERVER_URL) {
+  if (is.string(process.env.GITHUB_REPOSITORY) && is.string(process.env.GITHUB_SERVER_URL)) {
     return {
       url: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`,
       provider: GitProvider.Github,
     }
   }
-  if (process.env.BITBUCKET_GIT_HTTP_ORIGIN) {
+  if (is.string(process.env.BITBUCKET_GIT_HTTP_ORIGIN)) {
     return {
       url: process.env.BITBUCKET_GIT_HTTP_ORIGIN,
       provider: GitProvider.Bitbucket,
     }
   }
-  if (process.env.CI_PROJECT_URL) {
+  if (is.string(process.env.CI_PROJECT_URL)) {
     return { url: process.env.CI_PROJECT_URL, provider: GitProvider.Gitlab }
   }
   return null
@@ -151,17 +149,16 @@ export const detectGitRemoteFromEnv = (): {
 
 /** Provider inference from a host — only reliable for the public SaaS domains.
  *  Self-hosted instances must be resolved via detectGitRemoteFromEnv. */
-const URL_PROVIDER_MATCHERS: ReadonlyArray<[string, GitProvider]> = [
+const URL_PROVIDER_MATCHERS: readonly [string, GitProvider][] = [
   ['github.com', GitProvider.Github],
   ['bitbucket.org', GitProvider.Bitbucket],
   ['gitlab', GitProvider.Gitlab],
 ]
 
-export const providerFromUrl = (url: string): GitProvider | null =>
+const providerFromUrl = (url: string): GitProvider | null =>
   URL_PROVIDER_MATCHERS.find(([host]) => url.includes(host))?.[1] ?? null
 
-const refRange = (previous: string, next: string) =>
-  previous ? `${previous}...${next}` : next
+const refRange = (previous: string, next: string) => `${previous}...${next}`
 
 const COMMIT_LINK_BUILDERS: Record<
   GitProvider,
@@ -172,56 +169,73 @@ const COMMIT_LINK_BUILDERS: Record<
   [GitProvider.Bitbucket]: (url, commit) => `${url}/commits/${commit}`,
 }
 
+// The oldest section has no earlier ref to diff against, so it links to that
+// tag's commit list — a one-sided compare URL 404s on every provider.
 const COMPARE_LINK_BUILDERS: Record<
   GitProvider,
   (url: string, previous: string, next: string) => string
 > = {
-  [GitProvider.Github]: (url, previous, next) =>
-    `${url}/compare/${refRange(previous, next)}`,
-  [GitProvider.Gitlab]: (url, previous, next) =>
-    `${url}/-/compare/${refRange(previous, next)}`,
-  [GitProvider.Bitbucket]: (url, previous, next) =>
-    `${url}/branches/compare/${previous ? `${next}%0D${previous}` : next}`,
+  [GitProvider.Github]: (url, previous, next) => {
+    if (!previous) return `${url}/commits/${next}`
+    return `${url}/compare/${refRange(previous, next)}`
+  },
+  [GitProvider.Gitlab]: (url, previous, next) => {
+    if (!previous) return `${url}/-/commits/${next}`
+    return `${url}/-/compare/${refRange(previous, next)}`
+  },
+  [GitProvider.Bitbucket]: (url, previous, next) => {
+    if (!previous) return `${url}/commits/tag/${next}`
+    return `${url}/branches/compare/${next}%0D${previous}`
+  },
 }
 
-export const getCommitLink = (
+const getCommitLink = (
   provider: GitProvider,
   remoteUrl: string,
   commit: string,
 ) => COMMIT_LINK_BUILDERS[provider](remoteUrl, commit)
 
-export const getCompareLink = (
-  provider: GitProvider,
-  remoteUrl: string,
-  previous: string,
-  next: string,
-) => COMPARE_LINK_BUILDERS[provider](remoteUrl, previous, next)
+const getCompareLink = ({
+  provider,
+  remoteUrl,
+  previous,
+  next,
+}: {
+  provider: GitProvider
+  remoteUrl: string
+  previous: string
+  next: string
+}) => COMPARE_LINK_BUILDERS[provider](remoteUrl, previous, next)
 
-export const getTagsWithFallback = async (
+// An untagged repo reports no tags rather than inventing one. Callers already
+// treat a missing lower bound as "the whole history", which is what an unreleased
+// repo means — synthesising a 0.0.0 tag on the first commit instead excluded that
+// commit from every range that started at it.
+const getTags = async (
   git: Response<unknown> | SimpleGit,
   failOnMissingTag: boolean,
 ) => {
-  let tags = await git.fetch(['--tags']).tags({ '--sort': '-creatordate' })
+  const tags = await git.fetch(['--tags']).tags({ '--sort': '-creatordate' })
 
-  // In case there are no tags in repository, we add the first tag to older commit we can find.
-  if (tags.all.length < 1) {
-    if (failOnMissingTag) {
-      throw new Error('No semver tag found in repository.')
-    }
-
-    console.log('No tags found, adding first tag ...')
-
-    await git.fetch()
-
-    const commits = await git.log({
-      '--max-count': 200,
-    })
-
-    const firstCommit = commits.all[commits.all.length - 1].hash
-    await git.tag(['0.0.0', firstCommit])
-
-    tags = await git.fetch(['--tags']).tags({ '--sort': '-creatordate' })
+  if (tags.all.length === 0 && failOnMissingTag) {
+    throw new Error('No semver tag found in repository.')
   }
 
   return tags
+}
+
+export {
+  BumpType,
+  GitProvider,
+  bumpMapping,
+  isValidTag,
+  bumpCalculator,
+  wrapProcess,
+  sortTagsDescending,
+  findHighestTag,
+  detectGitRemoteFromEnv,
+  providerFromUrl,
+  getCommitLink,
+  getCompareLink,
+  getTags,
 }

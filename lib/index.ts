@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import path from 'path'
-
-import packageJson from '../package.json'
 import { changelogHandler } from './cli/changelog'
 import { commitHandler } from './cli/commit'
 import { guessHandler } from './cli/guess'
+import packageJson from '../package.json'
+import { resolve } from 'node:path'
 import { shipitHandler } from './cli/shipit'
 import { wrapProcess } from './utils'
 
@@ -34,9 +33,9 @@ program
     'Prefix version with string of your choice',
     'v',
   )
-  .action(async (commitMessage, latestVersion, options) => {
+  .action(async (commitMessage: string, latestVersion: string, options: { tagPrefix: string }) => {
     const { tagPrefix } = options
-    wrapProcess(guessHandler({ commitMessage, latestVersion, tagPrefix }))
+    await wrapProcess(() => guessHandler({ commitMessage, latestVersion, tagPrefix }))
   })
 
 program
@@ -62,12 +61,6 @@ program
     true,
   )
   .option(
-    '-a, --autoPush',
-    'This will automatically create release branch and tag commit in master.',
-    Boolean,
-    true,
-  )
-  .option(
     '-t, --tagPrefix <prefix>',
     'Prefix version with string of your choice.',
     'v',
@@ -85,11 +78,15 @@ program
   )
   .option(
     '--branchPrefixes <prefix01>,<prefix02>',
-    'Comma separated list of prefixes for branches to be ignored.',
+    'Comma separated list of prefixes; one release branch is created per prefix.',
     '',
   )
   .option('--changelog', 'Generate changelog.', false)
-  .action(async (options) => {
+  .action(async (options: {
+    tagPrefix: string; failOnMissingCommit: boolean; failOnMissingTag: boolean
+    releaseBranchPrefix: string; forceBump: boolean; gitUser: string; gitEmail: string
+    changelog: boolean; branchPrefixes: string
+  }) => {
     const {
       tagPrefix,
       failOnMissingCommit,
@@ -101,7 +98,7 @@ program
       changelog,
       branchPrefixes,
     } = options
-    wrapProcess(
+    await wrapProcess(() =>
       shipitHandler({
         tagPrefix,
         gitEmail,
@@ -112,7 +109,7 @@ program
         releaseBranchPrefix,
         generateChangelog: changelog,
         branchPrefixes: branchPrefixes.split(','),
-        changelogPath: path.resolve(commandCwd, './CHANGELOG.md'),
+        changelogPath: resolve(commandCwd, './CHANGELOG.md'),
       }),
     )
   })
@@ -123,21 +120,25 @@ program
   .option(
     '--outputFile <path>',
     'Path to file where changelog should be written.',
-    path.resolve(commandCwd, './CHANGELOG.md'),
+    resolve(commandCwd, './CHANGELOG.md'),
   )
-  .option('--gitBaseUrl <url>', 'Absolute URL to your git project', undefined)
-  .action(async (options) => {
+  .option('--gitBaseUrl <url>', 'Absolute URL to your git project')
+  .action(async (options: { outputFile: string; gitBaseUrl?: string }) => {
     const { outputFile, gitBaseUrl } = options
-    wrapProcess(changelogHandler({ outputFile, gitBaseUrl }))
+    await wrapProcess(() =>
+      changelogHandler(gitBaseUrl === undefined ? { outputFile } : { outputFile, gitBaseUrl }),
+    )
   })
 
 program
   .command('commit')
   .description('Commit changes to git.')
   .option('--cwd <path>', 'Path to your project.', commandCwd)
-  .action(async (options) => {
+  .action(async (options: { cwd: string }) => {
     const { cwd } = options
-    wrapProcess(commitHandler({ cwd }))
+    await wrapProcess(() => {
+      commitHandler({ cwd })
+    })
   })
 
-program.parse(process.argv)
+await program.parseAsync(process.argv)

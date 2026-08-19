@@ -1,18 +1,17 @@
-import { afterEach, describe, expect, it } from 'vitest'
-
-import { guessHandler } from '../lib/cli/guess'
 import {
-  bumpCalculator,
   BumpType,
+  GitProvider,
+  bumpCalculator,
   detectGitRemoteFromEnv,
   findHighestTag,
   getCommitLink,
   getCompareLink,
-  GitProvider,
   isValidTag,
   providerFromUrl,
   sortTagsDescending,
 } from '../lib/utils'
+import { afterEach, describe, expect, it } from 'vitest'
+import { guessHandler } from '../lib/cli/guess'
 
 describe('bumpCalculator', () => {
   it('bumps patch/minor/major', () => {
@@ -34,23 +33,23 @@ describe('isValidTag', () => {
 })
 
 describe('guessHandler (bumpMapping)', () => {
-  it('maps feat -> minor, fix -> patch, BREAKING CHANGE -> major', async () => {
+  it('maps feat -> minor, fix -> patch, BREAKING CHANGE -> major', () => {
     expect(
-      await guessHandler({
+      guessHandler({
         commitMessage: 'feat: x',
         latestVersion: 'v1.2.3',
         tagPrefix: 'v',
       }),
     ).toBe('v1.3.0')
     expect(
-      await guessHandler({
+      guessHandler({
         commitMessage: 'fix: x',
         latestVersion: 'v1.2.3',
         tagPrefix: 'v',
       }),
     ).toBe('v1.2.4')
     expect(
-      await guessHandler({
+      guessHandler({
         commitMessage: 'feat: x\n\nBREAKING CHANGE: y',
         latestVersion: 'v1.2.3',
         tagPrefix: 'v',
@@ -58,14 +57,14 @@ describe('guessHandler (bumpMapping)', () => {
     ).toBe('v2.0.0')
   })
 
-  it('throws on an unmappable message', async () => {
-    await expect(
+  it('throws on an unmappable message', () => {
+    expect(() =>
       guessHandler({
         commitMessage: 'random words',
         latestVersion: 'v1.0.0',
         tagPrefix: 'v',
       }),
-    ).rejects.toThrow()
+    ).toThrow()
   })
 })
 
@@ -93,12 +92,12 @@ describe('provider links', () => {
   })
 
   it('builds compare links per provider', () => {
-    expect(getCompareLink(GitProvider.Github, url, 'v1.0.0', 'v1.1.0')).toBe(
-      `${url}/compare/v1.0.0...v1.1.0`,
-    )
-    expect(getCompareLink(GitProvider.Gitlab, url, 'v1.0.0', 'v1.1.0')).toBe(
-      `${url}/-/compare/v1.0.0...v1.1.0`,
-    )
+    expect(
+      getCompareLink({ provider: GitProvider.Github, remoteUrl: url, previous: 'v1.0.0', next: 'v1.1.0' }),
+    ).toBe(`${url}/compare/v1.0.0...v1.1.0`)
+    expect(
+      getCompareLink({ provider: GitProvider.Gitlab, remoteUrl: url, previous: 'v1.0.0', next: 'v1.1.0' }),
+    ).toBe(`${url}/-/compare/v1.0.0...v1.1.0`)
   })
 
   it('infers provider from a host', () => {

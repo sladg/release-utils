@@ -1,0 +1,69 @@
+$schema: 'https://moonrepo.dev/schemas/project.json'
+
+language: 'typescript'
+layer: 'library'
+toolchains:
+  default: 'bun'
+
+fileGroups:
+  sources:
+    - 'lib/**/*'
+  tests:
+    - 'test/**/*'
+  configs:
+    - '.oxlintrc.json'
+    - 'tsconfig.json'
+
+tasks:
+  build:
+    command: 'bun x tsdown lib/index.ts'
+    inputs: ['@group(sources)', 'tsconfig.json']
+    outputs: ['dist']
+
+  lint-check:
+    command: 'bun x oxlint'
+    inputs: ['@group(sources)', '@group(tests)', '@group(configs)']
+
+  lint-fix:
+    command: 'bun x oxlint --fix'
+    options:
+      cache: false
+
+  lint-type:
+    command: 'bun x oxlint --type-aware'
+    inputs: ['@group(sources)', '@group(tests)', '@group(configs)']
+    options:
+      shell: true
+
+  typecheck:
+    command: 'bun x tsc --noEmit'
+    inputs: ['@group(sources)', '@group(tests)', '@group(configs)']
+
+  test-unit:
+    command: 'bun x vitest run'
+    inputs: ['@group(sources)', '@group(tests)', '@group(configs)']
+
+  fix:
+    command: 'noop'
+    deps: ['lint-fix']
+
+  lint:
+    command: 'noop'
+    deps: ['lint-check', 'lint-type', 'typecheck']
+
+  test:
+    command: 'noop'
+    deps: ['test-unit', 'typecheck']
+
+  release:
+    script: 'node ./dist/index.js shipit --gitUser @sladg --gitEmail jan@ssoukup.com --changelog'
+    deps: ['~:build']
+    options:
+      cache: false
+
+  commit:
+    script: 'node ./dist/index.js commit'
+    deps: ['~:build']
+    options:
+      cache: false
+      interactive: true

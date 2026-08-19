@@ -55,7 +55,15 @@ Common flags:
 | `--branchPrefixes <a,b>`      | —            | Comma-separated; creates one branch each.    |
 | `--changelog`                 | `false`      | Generate/update `CHANGELOG.md`.              |
 | `--failOnMissingTag`          | `false`      | Fail if no semver tag exists yet.            |
-| `--gitUser` / `--gitEmail`    | `Bender` / … | Identity used for the release commit.        |
+| `--failOnMissingCommit`       | `true`       | Fail when there are no commits since the last tag. |
+| `-f, --forceBump`             | `true`       | Fall back to a patch bump when no commit maps to one. |
+| `--gitUser` / `--gitEmail`    | `Bender` / `bender@bot.eu` | Identity used for the release commit. |
+
+### First release
+
+With no semver tag in the repo, `shipit` starts from `0.0.0` and counts **every** commit in the history toward the bump — an untagged repo has nothing released yet, so nothing is excluded. The changelog gets a single section for the new tag containing the full history, linked to the tag's commit list rather than a compare.
+
+Pass `--failOnMissingTag` to refuse to release instead.
 
 ## changelog
 
@@ -90,16 +98,34 @@ npx --package @sladg/release-utils utils commit --cwd ../other-project
 
 `shipit` locates the version by a declarative path (not blind text replacement), so nested dependency versions are never touched — even when a dependency shares your app's version.
 
-| Type  | Files                                                                                                          | Location                                                                                    |
-| ----- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| JSON  | `package.json`, `package-lock.json`, `composer.json`, `deno.json`, `jsr.json`, `lerna.json`, `tauri.conf.json` | `version` (plus lockfile / Tauri root entries)                                              |
-| TOML  | `Cargo.toml`, `pyproject.toml`                                                                                | `package.version` / `workspace.package.version`, `project.version` / `tool.poetry.version`  |
-| YAML  | `Chart.yaml`, `pubspec.yaml`, `galaxy.yml`, `CITATION.cff`                                                    | `version` (and `appVersion` for Helm)                                                       |
-| text  | `**/__init__.py`                                                                                              | `__version__`                                                                                |
-| plain | `VERSION`, `version.txt`                                                                                      | whole file (only when it already looks like a version)                                      |
+| Type  | Files | Location |
+| ----- | ----- | -------- |
+| JSON  | `package.json`, `package-lock.json`, `composer.json`, `deno.json(c)`, `jsr.json`, `lerna.json`, `tauri.conf.json`, `app.json` (Expo), `manifest.json` (browser extension) | `version` (plus lockfile root entry, `expo.version`, Tauri `package.version`) |
+| TOML  | `Cargo.toml`, `pyproject.toml`, `pixi.toml` | `package.version` / `workspace.package.version`, `project.version` / `tool.poetry.version` / `tool.commitizen.version`, `project.version` / `workspace.version` |
+| YAML  | `Chart.yaml`, `pubspec.yaml`, `galaxy.yml`, `CITATION.cff`, `snapcraft.yaml` | `version` (and `appVersion` for Helm) |
+| XML   | `pom.xml`, `*.csproj` / `*.vbproj` / `*.fsproj`, `Directory.Build.props`, `*.nuspec` | `project.version` + `project.parent.version`, `Project.PropertyGroup.Version` / `VersionPrefix`, `package.metadata.version` |
+| text  | `**/__init__.py`, `_version.py`, `version.py`, `setup.py`, `setup.cfg`, `*.gemspec`, `version.rb`, `*.podspec`, `mix.exs`, `build.gradle(.kts)`, `gradle.properties`, `*.spec` (RPM), `PKGBUILD` | identifier-anchored: `__version__`, `VERSION`, `version`, `Version`, `pkgver` |
+| plain | `VERSION`, `version.txt` | whole file (only when it already looks like a version) |
 
 Notes:
 
-- Globs cover monorepos (e.g. nested `**/package.json`), excluding `node_modules`, `vendor`, `.venv` and `.git`.
+- Globs cover monorepos (e.g. nested `**/package.json`), excluding `node_modules`, `vendor`, `.venv`, `venv`, `target`, `bin`, `obj`, `dist` and `.git`.
 - JSON keeps its indentation and YAML keeps its comments. TOML has no format-preserving editor in JS, so `Cargo.toml` / `pyproject.toml` are re-serialized (comments/layout are not preserved on bump).
-- Adding support for another file is a single row in `lib/version/index.ts` — no per-file code.
+- XML is edited by an element-path walk, not a regex, so a `<version>` under `<dependency>` or `<plugin>` is never touched.
+- Identifier-anchored files accept `=` or `:` and quoted or bare values. A bare value is only replaced when what is already there looks like a version, so `version = project.version` is left alone.
+- Helm charts bump `appVersion` only — the chart's own `version` tracks template changes, not app releases.
+- Adding support for another file is a single row in `lib/ecosystems.ts` — no per-file code.
+
+## Lockfile regeneration
+
+After a version bump, `shipit` regenerates the lockfile for any ecosystem whose manifest changed. The first package manager whose lockfile is present wins, so two never run for the same ecosystem.
+
+| Manifest | Detected lockfile → command |
+| -------- | --------------------------- |
+| `package.json` | `bun.lock(b)` → `bun install --lockfile-only`, `pnpm-lock.yaml` → `pnpm install --lockfile-only`, `package-lock.json` → `npm install --package-lock-only` |
+| `Cargo.toml` | always → `cargo update --workspace` |
+| `pyproject.toml` | `uv.lock` → `uv lock`, `poetry.lock` → `poetry lock --no-update`, `pdm.lock` → `pdm lock` |
+| `composer.json` | `composer.lock` → `composer update --lock` |
+| `mix.exs` | `mix.lock` → `mix deps.get` |
+
+Go is absent by design, not unsupported. `shipit` tags, branches and changelogs a Go repo like any other — there is simply no file to rewrite. A Go module's version *is* its git tag; `go.mod` holds the module path and the `go 1.x` language directive, neither of which is the app version. Since a release changes no dependency, `go.sum` stays valid and `go mod tidy` would only risk pulling unrelated dependency churn into the release commit.

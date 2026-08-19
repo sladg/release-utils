@@ -1,10 +1,10 @@
 import { bootstrap } from 'commitizen/dist/cli/git-cz'
 
-interface Props {
+export interface CommitHandlerProps {
   cwd: string
 }
 
-export const commitHandler = async ({ cwd }: Props) => {
+export const commitHandler = ({ cwd }: CommitHandlerProps) => {
   bootstrap(
     {
       // cliPath: path.join(__dirname, '../'),
@@ -17,6 +17,7 @@ export const commitHandler = async ({ cwd }: Props) => {
         ],
       },
     },
-    [], // This needs to be empty so commitizen does not pickup our CLI args
+    // This needs to be empty so commitizen does not pickup our CLI args
+    [],
   )
 }
