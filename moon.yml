@@ -56,13 +56,13 @@ tasks:
     deps: ['test-unit', 'typecheck']
 
   release:
-    script: 'node ./dist/index.js shipit --gitUser @sladg --gitEmail jan@ssoukup.com --changelog'
+    script: 'node ./dist/index.mjs shipit --gitUser @sladg --gitEmail jan@ssoukup.com --changelog'
     deps: ['~:build']
     options:
       cache: false
 
   commit:
-    script: 'node ./dist/index.js commit'
+    script: 'node ./dist/index.mjs commit'
     deps: ['~:build']
     options:
       cache: false

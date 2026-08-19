@@ -9,7 +9,7 @@
   "license": "MIT",
   "author": "Jan Soukup <jan@ssoukup.com>",
   "bin": {
-    "utils": "./dist/index.js"
+    "utils": "./dist/index.mjs"
   },
   "files": [
     "dist"
