@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [v3.2.0](https://github.com/sladg/release-utils/compare/v3.1.0...v3.2.0)
+
+* ci(release): verify npm token before release and add publish-only dispatch [[f97df79fe5cc5d46a131190f7cfe848d5ed7d139](https://github.com/sladg/release-utils/commit/f97df79fe5cc5d46a131190f7cfe848d5ed7d139)]
+
+
 ## [v3.1.0](https://github.com/sladg/release-utils/compare/v3.0.0...v3.1.0)
 
 * feat(postBump): allow for script to run post-bump such as formatting [[3ddee67caaf71444a7267fdaf472a2c59a0c3e3c](https://github.com/sladg/release-utils/commit/3ddee67caaf71444a7267fdaf472a2c59a0c3e3c)]
