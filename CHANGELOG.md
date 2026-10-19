@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [v3.1.0](https://github.com/sladg/release-utils/compare/v3.0.0...v3.1.0)
+
+* feat(postBump): allow for script to run post-bump such as formatting [[3ddee67caaf71444a7267fdaf472a2c59a0c3e3c](https://github.com/sladg/release-utils/commit/3ddee67caaf71444a7267fdaf472a2c59a0c3e3c)]
+
+
 ## [v3.0.0](https://github.com/sladg/release-utils/compare/v2.0.1...v3.0.0)
 
 * fix(ci): mjs [[577324f663a82cf011ec081311b49f1a24d1f333](https://github.com/sladg/release-utils/commit/577324f663a82cf011ec081311b49f1a24d1f333)]
