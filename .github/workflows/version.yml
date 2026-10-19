@@ -2,6 +2,14 @@ name: Bump version and fork a release branch
 on:
   push:
     branches: ['master']
+  # Publish-only: re-publishes an existing release tag to npm without bumping,
+  # for when a release was tagged and pushed but the npm publish step failed.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to publish to npm (e.g. v3.1.0)'
+        required: true
+        type: string
 
 jobs:
   deployment:
@@ -9,7 +17,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # shipit pushes the release commit, tag and branch before npm-publish runs,
+      # so a dead token would leave a tag with no npm package. Fail first instead.
+      # This proves the token authenticates, not that it can write this package.
+      - name: Verify npm token
+        run: |
+          test -n "$NPM_TOKEN" || { echo "::error::NPM_TOKEN secret is empty"; exit 1; }
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          npm whoami || { echo "::error::NPM_TOKEN is rejected by npm (expired or revoked?)"; exit 1; }
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
       - name: Prepare repository
         run: git fetch --unshallow --tags
       - uses: moonrepo/setup-toolchain@v0
@@ -18,9 +38,13 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Release
+        if: github.event_name == 'push'
         run: moon run :release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
+        if: github.event_name == 'workflow_dispatch'
+        run: moon run :build
       - uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
