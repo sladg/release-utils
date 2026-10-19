@@ -5,6 +5,7 @@ import {
   findHighestTag,
   getTags,
   isValidTag,
+  runSync,
 } from '../utils'
 
 import { releaseCommitPrefix, skipCiFlag } from '../consts'
@@ -25,6 +26,10 @@ export interface ShipitHandlerProps {
   generateChangelog: boolean
   changelogPath: string
   branchPrefixes: string[]
+  /** Shell command run on the bumped, uncommitted tree (e.g. the repo's formatter)
+   *  so the release commit, tag and branches carry its output. A failure aborts
+   *  the release before anything is committed. */
+  postBump: string | undefined
 }
 
 const getTestStr = (message: string, body: string, scanBody?: boolean) => {
@@ -122,7 +127,7 @@ const publishRelease = async ({
 
 export const shipitHandler = async ({
   gitEmail, gitUser, tagPrefix, failOnMissingCommit, failOnMissingTag,
-  forceBump, releaseBranchPrefix, generateChangelog, changelogPath, branchPrefixes,
+  forceBump, releaseBranchPrefix, generateChangelog, changelogPath, branchPrefixes, postBump,
 }: ShipitHandlerProps) => {
   // Awaiting the chain would resolve to addConfig's string result, not the client.
   const git = simpleGit()
@@ -147,6 +152,11 @@ export const shipitHandler = async ({
   if (generateChangelog) {
     console.log('Generating changelog...')
     await changelogHandler({ outputFile: changelogPath, nextTag: nextTagWithPrefix })
+  }
+
+  if (is.string(postBump)) {
+    console.log('Running post-bump command...')
+    runSync(postBump, process.cwd())
   }
 
   await publishRelease({ git, remote, branch, nextTagWithPrefix, releaseBranches })

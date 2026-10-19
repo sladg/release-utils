@@ -44,6 +44,9 @@ npx --package @sladg/release-utils utils shipit --branchPrefixes "api,web"
 
 # Fail instead of releasing when there is no semver tag yet.
 npx --package @sladg/release-utils utils shipit --failOnMissingTag
+
+# Run the repo's formatter on the bumped files before the release commit.
+npx --package @sladg/release-utils utils shipit --changelog --postBump "moon run :fix"
 ```
 
 Common flags:
@@ -58,6 +61,14 @@ Common flags:
 | `--failOnMissingCommit`       | `true`       | Fail when there are no commits since the last tag. |
 | `-f, --forceBump`             | `true`       | Fall back to a patch bump when no commit maps to one. |
 | `--gitUser` / `--gitEmail`    | `Bender` / `bender@bot.eu` | Identity used for the release commit. |
+| `--postBump <command>`        | —            | Shell command run before the release commit. |
+
+### Post-bump hook
+
+`--postBump` runs a shell command in the repo root after the version bump, lockfile regeneration and changelog, with all of those changes still uncommitted. Use it to run the repo's own formatter. Re-serialized TOML (see below) would otherwise land unformatted on the default branch. Any tool works: `moon run :fix`, `taplo fmt`, `prettier --write .`, `nx format:write`.
+
+- Whatever the command changes in the working tree is part of the release commit, so the commit, the tag and the release branches all point at the formatted tree.
+- A non-zero exit aborts the release before anything is committed, tagged or pushed.
 
 ### First release
 

@@ -1,4 +1,5 @@
 import type { Response, SimpleGit } from 'simple-git'
+import { execSync } from 'node:child_process'
 import { is } from '@sladg/what-that'
 import semver from 'semver'
 import semverRegex from 'semver-regex'
@@ -108,7 +109,14 @@ const wrapProcess = async (run: () => unknown) => {
   }
 }
 
-const isSemverTag = (tag: string) => Boolean(semverRegex().exec(tag)?.[0])
+/** Runs a command through the shell, so user-supplied hooks may use arguments,
+ *  pipes and `&&`. A non-zero exit throws. */
+const runSync = (cmd: string, cwd?: string) => {
+  console.log(`  $ ${cmd}`)
+  execSync(cmd, { stdio: 'inherit', cwd })
+}
+
+const isSemverTag =(tag: string) => Boolean(semverRegex().exec(tag)?.[0])
 const parseTag = (tag: string): string => semverRegex().exec(tag)?.[0] ?? '0.0.0'
 
 const sortTagsDescending = (tags: string[]) =>
@@ -231,6 +239,7 @@ export {
   isValidTag,
   bumpCalculator,
   wrapProcess,
+  runSync,
   sortTagsDescending,
   findHighestTag,
   detectGitRemoteFromEnv,

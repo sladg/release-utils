@@ -1,14 +1,9 @@
 import { basename, join } from 'node:path'
 import { ECOSYSTEMS } from '../ecosystems'
 import type { Ecosystem } from '../version/types'
-import { execSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { is } from '@sladg/what-that'
-
-const runSync = (cmd: string, cwd?: string) => {
-  console.log(`  $ ${cmd}`)
-  execSync(cmd, { stdio: 'inherit', cwd })
-}
+import { runSync } from '../utils'
 
 // First manager whose `detect` file exists wins, so two package managers never
 // both run for one ecosystem. A manager without `detect` always applies.

@@ -82,10 +82,14 @@ program
     '',
   )
   .option('--changelog', 'Generate changelog.', false)
+  .option(
+    '--postBump <command>',
+    'Shell command run after the bump, lockfile and changelog steps, before the release commit (e.g. "moon run :fix"). Its changes are included in the release commit; a non-zero exit aborts the release.',
+  )
   .action(async (options: {
     tagPrefix: string; failOnMissingCommit: boolean; failOnMissingTag: boolean
     releaseBranchPrefix: string; forceBump: boolean; gitUser: string; gitEmail: string
-    changelog: boolean; branchPrefixes: string
+    changelog: boolean; branchPrefixes: string; postBump?: string
   }) => {
     const {
       tagPrefix,
@@ -97,6 +101,7 @@ program
       gitEmail,
       changelog,
       branchPrefixes,
+      postBump,
     } = options
     await wrapProcess(() =>
       shipitHandler({
@@ -110,6 +115,7 @@ program
         generateChangelog: changelog,
         branchPrefixes: branchPrefixes.split(','),
         changelogPath: resolve(commandCwd, './CHANGELOG.md'),
+        postBump,
       }),
     )
   })
