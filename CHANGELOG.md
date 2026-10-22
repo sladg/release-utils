@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [v3.2.1](https://github.com/sladg/release-utils/compare/v3.2.0...v3.2.1)
+
+* fix(poetry): v2 removed flag, removed on our end as well [[2d5964cb7316f008702dcf8797be3c3c046c4813](https://github.com/sladg/release-utils/commit/2d5964cb7316f008702dcf8797be3c3c046c4813)]
+
+
 ## [v3.2.0](https://github.com/sladg/release-utils/compare/v3.1.0...v3.2.0)
 
 * ci(release): verify npm token before release and add publish-only dispatch [[f97df79fe5cc5d46a131190f7cfe848d5ed7d139](https://github.com/sladg/release-utils/commit/f97df79fe5cc5d46a131190f7cfe848d5ed7d139)]
