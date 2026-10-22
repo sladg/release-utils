@@ -135,7 +135,7 @@ After a version bump, `shipit` regenerates the lockfile for any ecosystem whose 
 | -------- | --------------------------- |
 | `package.json` | `bun.lock(b)` → `bun install --lockfile-only`, `pnpm-lock.yaml` → `pnpm install --lockfile-only`, `package-lock.json` → `npm install --package-lock-only` |
 | `Cargo.toml` | always → `cargo update --workspace` |
-| `pyproject.toml` | `uv.lock` → `uv lock`, `poetry.lock` → `poetry lock --no-update`, `pdm.lock` → `pdm lock` |
+| `pyproject.toml` | `uv.lock` → `uv lock`, `poetry.lock` → `poetry lock`, `pdm.lock` → `pdm lock` |
 | `composer.json` | `composer.lock` → `composer update --lock` |
 | `mix.exs` | `mix.lock` → `mix deps.get` |
 

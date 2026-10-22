@@ -85,7 +85,7 @@ const ECOSYSTEMS: Record<string, Ecosystem> = {
     ],
     lockfile: [
       { detect: 'uv.lock', cmd: 'uv lock' },
-      { detect: 'poetry.lock', cmd: 'poetry lock --no-update' },
+      { detect: 'poetry.lock', cmd: 'poetry lock' },
       { detect: 'pdm.lock', cmd: 'pdm lock' },
     ],
   },

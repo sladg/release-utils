@@ -68,7 +68,7 @@ describe('regenerateLockfiles', () => {
     const dir = makeTmpDir()
     touch(dir, 'poetry.lock')
     regenerateLockfiles(['pyproject.toml'], dir)
-    expect(exec).toHaveBeenCalledWith('poetry lock --no-update', expect.objectContaining({ cwd: dir }))
+    expect(exec).toHaveBeenCalledWith('poetry lock', expect.objectContaining({ cwd: dir }))
   })
 
   it('prefers uv over poetry when both lockfiles present', () => {
